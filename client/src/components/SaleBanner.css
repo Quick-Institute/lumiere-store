@@ -1,0 +1,40 @@
+.sale-banner {
+  position: relative;
+  min-height: 260px;
+  background: linear-gradient(90deg, var(--blush) 0%, var(--blush-light) 100%);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.sale-image {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 55%;
+  background-size: cover;
+  background-position: center;
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 40%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 40%);
+}
+
+.sale-content {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  padding-top: 50px;
+  padding-bottom: 50px;
+}
+
+.sale-content h2 {
+  font-size: 46px;
+  margin: 8px 0 10px;
+}
+
+.sale-text {
+  color: var(--muted);
+  max-width: 340px;
+  margin-bottom: 22px;
+  font-size: 15px;
+}

@@ -1,0 +1,226 @@
+.pd-crumbs {
+  padding-top: 26px;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.pd-crumbs a:hover {
+  color: var(--deep-rose);
+}
+
+.pd-crumbs span {
+  color: var(--text);
+}
+
+.pd-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 56px;
+  padding-top: 28px;
+  padding-bottom: 60px;
+  align-items: start;
+}
+
+.pd-image {
+  position: relative;
+  aspect-ratio: 3 / 4;
+  border-radius: 8px;
+  background-color: var(--blush);
+  background-size: cover;
+  background-position: center top;
+}
+
+.pd-image .discount-tag {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: var(--deep-rose);
+  color: var(--white);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 999px;
+}
+
+.pd-info h1 {
+  font-size: 40px;
+  margin: 8px 0 12px;
+}
+
+.pd-rating {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.pd-rating span {
+  margin-left: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.pd-price {
+  margin: 16px 0;
+  font-size: 24px;
+}
+
+.pd-price .sale {
+  color: var(--deep-rose);
+  font-weight: 500;
+}
+
+.pd-price s {
+  margin-left: 12px;
+  font-size: 17px;
+  color: var(--muted);
+}
+
+.pd-desc {
+  color: var(--muted);
+  font-size: 15px;
+  max-width: 480px;
+  margin-bottom: 26px;
+}
+
+.pd-block {
+  margin-bottom: 22px;
+}
+
+.pd-block h4 {
+  font-family: var(--font-body);
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--deep-rose);
+  margin-bottom: 10px;
+}
+
+.pd-swatches,
+.pd-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pd-qty {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid #ddd2e6;
+  border-radius: 999px;
+}
+
+.pd-qty button {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pd-qty button:hover {
+  color: var(--deep-rose);
+}
+
+.pd-qty span {
+  min-width: 36px;
+  text-align: center;
+  font-weight: 500;
+}
+
+.pd-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 8px;
+}
+
+.pd-heart {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 1px solid #ddd2e6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.pd-heart:hover,
+.pd-heart.liked {
+  color: var(--deep-rose);
+  border-color: var(--deep-rose);
+}
+
+.pd-message {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--deep-rose);
+}
+
+.pd-perks {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid #eee6f2;
+}
+
+.pd-perks p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.pd-related {
+  padding-bottom: 70px;
+}
+
+.pd-related h2 {
+  font-size: 32px;
+  margin-bottom: 24px;
+}
+
+.not-found {
+  padding: 100px 24px;
+  text-align: center;
+}
+
+.not-found h1 {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 800px) {
+  .pd-layout {
+    grid-template-columns: 1fr;
+    gap: 28px;
+  }
+}
+.pd-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.pd-sizes .chip {
+  min-width: 52px;
+  padding: 10px 16px;
+  border: 1px solid #ddd2e6;
+  border-radius: 999px;
+  font-size: 14px;
+  background: var(--white);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pd-sizes .chip:hover {
+  border-color: var(--deep-rose);
+  color: var(--deep-rose);
+}
+
+.pd-sizes .chip.active {
+  background: var(--deep-rose);
+  border-color: var(--deep-rose);
+  color: var(--white);
+}

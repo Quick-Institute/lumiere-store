@@ -1,0 +1,159 @@
+.page-hero {
+  background: linear-gradient(120deg, var(--blush) 0%, var(--blush-light) 55%, #e9dcf3 100%);
+  padding: 60px 0 54px;
+  text-align: center;
+}
+
+.page-hero h1 {
+  font-size: 54px;
+  line-height: 1.1;
+  margin: 8px 0 10px;
+}
+
+.page-hero h1 .script {
+  font-size: 64px;
+}
+
+.page-sub {
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.about-story {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 60px;
+  align-items: center;
+  padding-top: 70px;
+  padding-bottom: 70px;
+}
+
+.about-text h2 {
+  font-size: 38px;
+  line-height: 1.2;
+  margin: 8px 0 18px;
+}
+
+.about-text p {
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 16px;
+}
+
+.about-text .btn {
+  display: inline-block;
+  margin-top: 10px;
+}
+
+.about-stats {
+  display: grid;
+  gap: 16px;
+}
+
+.stat-card {
+  background: var(--blush-light);
+  border-radius: 16px;
+  padding: 26px 30px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  transition: transform 0.25s;
+}
+
+.stat-card:hover {
+  transform: translateX(6px);
+}
+
+.stat-card h3 {
+  font-size: 40px;
+  color: var(--deep-rose);
+  min-width: 110px;
+}
+
+.stat-card p {
+  color: var(--muted);
+}
+
+.about-values {
+  background: var(--blush-light);
+  padding: 70px 0 80px;
+}
+
+.section-head {
+  text-align: center;
+  margin-bottom: 44px;
+}
+
+.section-head h2 {
+  font-size: 40px;
+  margin-top: 6px;
+}
+
+.section-head h2 .script {
+  font-size: 48px;
+}
+
+.values-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.value-card {
+  background: var(--white);
+  border-radius: 16px;
+  padding: 30px 24px;
+  text-align: center;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.value-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(134, 100, 170, 0.16);
+}
+
+.value-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  background: var(--blush);
+  color: var(--deep-rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.value-card h4 {
+  font-family: var(--font-body);
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.value-card p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+@media (max-width: 900px) {
+  .page-hero h1 {
+    font-size: 40px;
+  }
+  .page-hero h1 .script {
+    font-size: 48px;
+  }
+  .about-story {
+    grid-template-columns: 1fr;
+    gap: 36px;
+  }
+  .values-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 520px) {
+  .values-grid {
+    grid-template-columns: 1fr;
+  }
+}

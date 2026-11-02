@@ -1,0 +1,193 @@
+/* ===== Admin: Products & Stock ===== */
+.ap-form {
+  background: var(--white);
+  border: 1px solid #eee5f3;
+  border-radius: 18px;
+  padding: 28px;
+  margin: 24px 0 32px;
+  box-shadow: 0 8px 24px rgba(134, 100, 170, 0.08);
+}
+.ap-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 28px;
+  margin-top: 16px;
+}
+.ap-label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.ap-drop {
+  width: 200px;
+  height: 250px;
+  border: 2px dashed var(--dusty-rose);
+  border-radius: 14px;
+  background: var(--blush-light) center / cover no-repeat;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--deep-rose);
+  text-align: center;
+}
+.ap-drop span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+.ap-remove-img {
+  margin-top: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+}
+.ap-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+  align-content: start;
+}
+.ap-wide {
+  grid-column: 1 / -1;
+}
+.ap-fields input,
+.ap-fields select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e3d8ec;
+  border-radius: 10px;
+  background: var(--white);
+  font-family: var(--font-body);
+  font-size: 15px;
+}
+.ap-cap {
+  text-transform: capitalize;
+}
+
+/* stock buttons */
+.ap-stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  border: 1px solid #e3d8ec;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: var(--white);
+}
+.ap-stepper strong {
+  min-width: 28px;
+  text-align: center;
+  font-family: var(--font-body);
+  font-size: 16px;
+}
+.ap-stepper button {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: none;
+  background: var(--blush);
+  color: var(--deep-rose);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.ap-stepper.small {
+  border: none;
+  padding: 0;
+  gap: 10px;
+}
+.ap-stepper.small button {
+  width: 26px;
+  height: 26px;
+}
+.ap-badge {
+  background: #fde8ec;
+  color: #c0475f;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.ap-badge.out {
+  background: #eee;
+  color: #777;
+}
+
+/* size buttons */
+.ap-sizes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ap-size {
+  min-width: 46px;
+  padding: 9px 14px;
+  border: 1px solid #e3d8ec;
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 14px;
+  cursor: pointer;
+}
+.ap-size.on {
+  background: var(--deep-rose);
+  border-color: var(--deep-rose);
+  color: #fff;
+}
+
+.ap-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* table: photo + action buttons */
+.prod-cell {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.prod-cell .thumb {
+  width: 54px;
+  height: 66px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background-color: var(--blush-light);
+  background-size: cover;
+  background-position: center;
+}
+.row-actions {
+  display: flex;
+  gap: 10px;
+}
+.row-actions button {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #e3d8ec;
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.row-actions button.danger {
+  color: #c0475f;
+}
+
+@media (max-width: 700px) {
+  .ap-grid,
+  .ap-fields {
+    grid-template-columns: 1fr;
+  }
+}

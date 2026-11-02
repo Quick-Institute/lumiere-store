@@ -1,0 +1,87 @@
+:root {
+  --blush: #f1e9f6;
+  --blush-light: #faf5fb;
+  --dusty-rose: #c7b0dc;
+  --deep-rose: #8664aa;
+  --deep-rose-dark: #6f4f92;
+  --text: #2f2638;
+  --muted: #766b80;
+  --white: #ffffff;
+  --font-heading: "Cormorant Garamond", serif;
+  --font-script: "Dancing Script", cursive;
+  --font-body: "Inter", sans-serif;
+  --container: 1200px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--text);
+  background: var(--white);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+.container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+}
+
+.script {
+  font-family: var(--font-script);
+  color: var(--deep-rose);
+}
+
+.label {
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--deep-rose);
+  font-weight: 600;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--deep-rose);
+  color: var(--white);
+  padding: 14px 28px;
+  border-radius: 999px;
+  font-size: 15px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn:hover {
+  background: var(--deep-rose-dark);
+}
