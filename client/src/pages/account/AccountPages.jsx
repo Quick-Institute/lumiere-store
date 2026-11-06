@@ -1,40 +1,34 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Download } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { useOrders } from "../../context/OrderContext";
 import { useWishlist } from "../../context/WishlistContext";
 import ProductCard from "../../components/ProductCard";
 import { products } from "../../data/products";
+import { downloadInvoice } from "../../utils/invoice";
 import "./AccountPages.css";
 
 const formatPrice = (amount) => `Rs. ${amount.toLocaleString("en-LK")}`;
 
-// Sample past orders (shown below the real ones)
-const sampleOrders = [
-  { id: "#LM1003", date: "2026-10-18", items: 2, total: 21300, status: "Shipped" },
-  { id: "#LM1002", date: "2026-10-05", items: 1, total: 8900, status: "Delivered" },
-  { id: "#LM1001", date: "2026-09-21", items: 1, total: 17900, status: "Delivered" },
-];
-
-// Real orders placed by the logged-in customer + the samples
-function useMyOrders() {
-  const { user } = useAuth();
-  const { orders } = useOrders();
-
-  const real = orders
-    .filter((o) => o.userEmail === user.email)
-    .map((o) => ({
-      id: o.id,
-      date: o.date,
-      items: o.itemCount,
-      total: o.total,
-      status: o.status,
-    }));
-
-  return [...real, ...sampleOrders];
-}
+const invoiceButton = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
+  padding: "6px 12px",
+  border: "1px solid #d9cfe0",
+  borderRadius: 8,
+  background: "transparent",
+  color: "#7a559f",
+  fontSize: 13,
+  cursor: "pointer",
+};
 
 function OrdersTable({ list }) {
+  if (list.length === 0) {
+    return <p className="dash-sub">You have no orders yet.</p>;
+  }
+
   return (
     <div className="table-wrap">
       <table className="data-table">
@@ -45,17 +39,27 @@ function OrdersTable({ list }) {
             <th>Items</th>
             <th>Total</th>
             <th>Status</th>
+            <th>Invoice</th>
           </tr>
         </thead>
         <tbody>
           {list.map((o) => (
             <tr key={o.id}>
-              <td>{o.id}</td>
+              <td>{o.number}</td>
               <td>{o.date}</td>
-              <td>{o.items}</td>
+              <td>{o.itemCount}</td>
               <td>{formatPrice(o.total)}</td>
               <td>
                 <span className={`status ${o.status.toLowerCase()}`}>{o.status}</span>
+              </td>
+              <td>
+                <button
+                  type="button"
+                  style={invoiceButton}
+                  onClick={() => downloadInvoice(o)}
+                >
+                  <Download size={14} /> PDF
+                </button>
               </td>
             </tr>
           ))}
@@ -67,7 +71,7 @@ function OrdersTable({ list }) {
 
 export function AccountOverview() {
   const { user } = useAuth();
-  const orders = useMyOrders();
+  const { orders } = useOrders();
   const { count } = useWishlist();
 
   return (
@@ -101,12 +105,12 @@ export function AccountOverview() {
 }
 
 export function MyOrders() {
-  const orders = useMyOrders();
+  const { orders } = useOrders();
 
   return (
     <>
       <h1>My Orders</h1>
-      <p className="dash-sub">Track the status of your orders.</p>
+      <p className="dash-sub">Track the status of your orders and download invoices.</p>
       <OrdersTable list={orders} />
     </>
   );

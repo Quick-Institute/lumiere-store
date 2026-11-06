@@ -10,6 +10,7 @@ function Login() {
   const [mode, setMode] = useState("login");
   const [form, setForm] = useState({ name: "", email: "", password: "", confirm: "" });
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
 
@@ -30,7 +31,7 @@ function Login() {
     navigate(result.user.role === "admin" ? "/admin" : "/account");
   };
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -43,10 +44,15 @@ function Login() {
         setError("Passwords do not match.");
         return;
       }
-      finish(register(form.name, form.email, form.password));
-    } else {
-      finish(login(form.email, form.password));
     }
+
+    setBusy(true);
+    const result =
+      mode === "register"
+        ? await register(form.name, form.email, form.password)
+        : await login(form.email, form.password);
+    setBusy(false);
+    finish(result);
   };
 
   return (
@@ -174,9 +180,9 @@ function Login() {
 
             {error && <p className="auth-error">{error}</p>}
 
-            <button type="submit" className="btn auth-submit">
-              {mode === "login" ? "Login" : "Create account"}
-              <ArrowRight size={18} />
+            <button type="submit" className="btn auth-submit" disabled={busy}>
+              {busy ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
+              {!busy && <ArrowRight size={18} />}
             </button>
           </form>
 

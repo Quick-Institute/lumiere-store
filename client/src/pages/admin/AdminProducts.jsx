@@ -1,6 +1,11 @@
 import { useState, useRef } from "react";
 import { Pencil, Trash2, Minus, Plus, ImagePlus, X, Check } from "lucide-react";
-import { products, saveProducts } from "../../data/products";
+import {
+  products,
+  createProduct,
+  updateProduct,
+  deleteProduct,
+} from "../../data/products";
 import "./AdminPages.css";
 
 const CATEGORIES = ["dresses", "tops", "pants", "jackets", "bags"];
@@ -30,7 +35,7 @@ const emptyForm = {
   image: "",
 };
 
-// shrink the picture so it fits in browser storage
+// shrink the picture so it stays small
 function readImage(file, done) {
   const reader = new FileReader();
   reader.onload = () => {
@@ -80,14 +85,11 @@ function AdminProducts() {
   const [items, setItems] = useState(() => [...products]);
   const [form, setForm] = useState(emptyForm);
   const [editId, setEditId] = useState(null);
+  const [busy, setBusy] = useState(false);
   const fileRef = useRef(null);
 
-  const save = (next) => {
-    setItems(next);
-    if (!saveProducts(next)) {
-      alert("Storage is full. Try a smaller photo or delete a product.");
-    }
-  };
+  // the shared list is updated by the helpers, so just copy it
+  const refresh = () => setItems([...products]);
 
   const reset = () => {
     setForm(emptyForm);
@@ -115,7 +117,7 @@ function AdminProducts() {
   const addCustomColor = (c) =>
     setForm((f) => (f.colors.includes(c) ? f : { ...f, colors: [...f.colors, c] }));
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.price) return;
     const base = {
@@ -128,22 +130,26 @@ function AdminProducts() {
       description: form.description.trim(),
       image: form.image || FALLBACK_IMAGE,
     };
-    if (editId) {
-      save(items.map((p) => (p.id === editId ? { ...p, ...base } : p)));
-    } else {
-      save([
-        {
-          id: Date.now(),
+
+    setBusy(true);
+    try {
+      if (editId) {
+        await updateProduct(editId, base);
+      } else {
+        await createProduct({
           oldPrice: null,
           discount: null,
           rating: 4.5,
           reviews: 0,
           ...base,
-        },
-        ...items,
-      ]);
+        });
+      }
+      refresh();
+      reset();
+    } catch (err) {
+      alert(err.message);
     }
-    reset();
+    setBusy(false);
   };
 
   const edit = (p) => {
@@ -161,12 +167,24 @@ function AdminProducts() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const remove = (p) => {
-    if (window.confirm(`Delete "${p.name}"?`)) save(items.filter((x) => x.id !== p.id));
+  const remove = async (p) => {
+    if (!window.confirm(`Delete "${p.name}"?`)) return;
+    try {
+      await deleteProduct(p.id);
+      refresh();
+    } catch (err) {
+      alert(err.message);
+    }
   };
 
-  const changeStock = (id, delta) =>
-    save(items.map((p) => (p.id === id ? { ...p, stock: Math.max(0, p.stock + delta) } : p)));
+  const changeStock = async (p, delta) => {
+    try {
+      await updateProduct(p.id, { stock: Math.max(0, p.stock + delta) });
+      refresh();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const formStock = (delta) =>
     setForm((f) => ({ ...f, stock: Math.max(0, Number(f.stock) + delta) }));
@@ -329,8 +347,8 @@ function AdminProducts() {
         </div>
 
         <div className="ap-buttons">
-          <button className="btn" type="submit">
-            {editId ? "Save changes" : "Add product"}
+          <button className="btn" type="submit" disabled={busy}>
+            {busy ? "Saving..." : editId ? "Save changes" : "Add product"}
           </button>
           <button className="btn btn-outline" type="button" onClick={reset}>
             Cancel
@@ -365,11 +383,11 @@ function AdminProducts() {
                 <td>Rs. {Number(p.price).toLocaleString()}</td>
                 <td>
                   <div className="ap-stepper small">
-                    <button onClick={() => changeStock(p.id, -1)} aria-label="Decrease">
+                    <button onClick={() => changeStock(p, -1)} aria-label="Decrease">
                       <Minus size={14} />
                     </button>
                     <strong>{p.stock}</strong>
-                    <button onClick={() => changeStock(p.id, 1)} aria-label="Increase">
+                    <button onClick={() => changeStock(p, 1)} aria-label="Increase">
                       <Plus size={14} />
                     </button>
                     {p.stock === 0 ? (

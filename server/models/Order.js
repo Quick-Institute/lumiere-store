@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 
 const orderSchema = new mongoose.Schema(
   {
+    number: { type: Number },
     user: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     items: [
       {
@@ -14,14 +15,17 @@ const orderSchema = new mongoose.Schema(
         color: String,
       },
     ],
+    subtotal: { type: Number, default: 0 },
+    shippingFee: { type: Number, default: 0 },
     total: { type: Number, required: true },
     shipping: {
       name: String,
       phone: String,
       address: String,
       city: String,
+      postal: String,
     },
-    paymentMethod: { type: String, default: "card" },
+    paymentMethod: { type: String, default: "Cash on Delivery" },
     paymentStatus: { type: String, default: "Unpaid" },
     status: {
       type: String,

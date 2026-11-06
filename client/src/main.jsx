@@ -7,19 +7,26 @@ import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
 import { OrderProvider } from "./context/OrderContext";
 import { WishlistProvider } from "./context/WishlistContext";
+import { loadProducts } from "./data/products";
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <OrderProvider>
-            <WishlistProvider>
-              <App />
-            </WishlistProvider>
-          </OrderProvider>
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  </StrictMode>
-);
+async function start() {
+  await loadProducts();
+
+  createRoot(document.getElementById("root")).render(
+    <StrictMode>
+      <BrowserRouter>
+        <AuthProvider>
+          <CartProvider>
+            <OrderProvider>
+              <WishlistProvider>
+                <App />
+              </WishlistProvider>
+            </OrderProvider>
+          </CartProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </StrictMode>
+  );
+}
+
+start();

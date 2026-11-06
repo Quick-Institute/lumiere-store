@@ -5,9 +5,23 @@ const { protect, adminOnly } = require("../middleware/auth");
 
 const router = express.Router();
 
-// POST /api/orders (logged-in user places an order)
+const FREE_SHIPPING_OVER = 10000;
+const SHIPPING_FEE = 500;
+const STATUSES = ["Pending", "Processing", "Shipped", "Delivered", "Cancelled"];
+
+// order numbers go #LM2001, #LM2002 ...
+async function nextNumber() {
+  const last = await Order.findOne({ number: { $exists: true } }).sort({ number: -1 });
+  return last ? last.number + 1 : 2001;
+}
+
+// POST /api/orders (a customer places an order)
 router.post("/", protect, async (req, res) => {
   try {
+    if (req.user.role === "admin") {
+      return res.status(403).json({ message: "Admin accounts can't place orders." });
+    }
+
     const { items, shipping, paymentMethod } = req.body;
 
     if (!Array.isArray(items) || items.length === 0) {
@@ -18,9 +32,16 @@ router.post("/", protect, async (req, res) => {
     const lines = [];
     for (const it of items) {
       const qty = Number(it.qty);
-      const product = await Product.findById(it.productId);
+      let product = null;
+      try {
+        product = await Product.findById(it.productId);
+      } catch {
+        product = null;
+      }
       if (!product) {
-        return res.status(400).json({ message: "A product in your cart no longer exists." });
+        return res.status(400).json({
+          message: "A product in your cart no longer exists. Please clear your cart.",
+        });
       }
       if (!qty || qty < 1) {
         return res.status(400).json({ message: "Invalid quantity." });
@@ -57,14 +78,19 @@ router.post("/", protect, async (req, res) => {
       done.push(line);
     }
 
-    // 3. save the order
-    const total = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+    // 3. work out the money on the server and save the order
+    const subtotal = lines.reduce((sum, l) => sum + l.price * l.qty, 0);
+    const shippingFee = subtotal >= FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE;
+
     const order = await Order.create({
+      number: await nextNumber(),
       user: req.user.id,
       items: lines,
-      total,
+      subtotal,
+      shippingFee,
+      total: subtotal + shippingFee,
       shipping,
-      paymentMethod: paymentMethod || "card",
+      paymentMethod: paymentMethod || "Cash on Delivery",
     });
 
     res.status(201).json(order);
@@ -91,13 +117,36 @@ router.get("/", protect, adminOnly, async (req, res) => {
 router.put("/:id/status", protect, adminOnly, async (req, res) => {
   try {
     const { status } = req.body;
+    if (!STATUSES.includes(status)) {
+      return res.status(400).json({ message: "Invalid status." });
+    }
+
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found." });
 
-    // cancelling puts the stock back
-    if (status === "Cancelled" && order.status !== "Cancelled") {
+    const wasCancelled = order.status === "Cancelled";
+    const willCancel = status === "Cancelled";
+
+    if (willCancel && !wasCancelled) {
+      // cancelling puts the stock back
       for (const it of order.items) {
         await Product.findByIdAndUpdate(it.product, { $inc: { stock: it.qty } });
+      }
+    } else if (!willCancel && wasCancelled) {
+      // re-opening a cancelled order takes the stock out again
+      const done = [];
+      for (const it of order.items) {
+        const updated = await Product.findOneAndUpdate(
+          { _id: it.product, stock: { $gte: it.qty } },
+          { $inc: { stock: -it.qty } }
+        );
+        if (!updated) {
+          for (const d of done) {
+            await Product.findByIdAndUpdate(d.product, { $inc: { stock: d.qty } });
+          }
+          return res.status(400).json({ message: "Not enough stock to re-open this order." });
+        }
+        done.push(it);
       }
     }
 

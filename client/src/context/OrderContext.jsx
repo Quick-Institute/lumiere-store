@@ -1,94 +1,91 @@
-import { createContext, useContext, useState } from "react";
-import { products, saveProducts } from "../data/products";
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { api } from "../api";
+import { useAuth } from "./AuthContext";
+import { loadProducts } from "../data/products";
 
 const OrderContext = createContext(null);
-const STORAGE_KEY = "lumiere_orders";
-const FIRST_NUMBER = 2001;
 
-function loadOrders() {
-  try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  } catch {
-    return [];
-  }
-}
+const localDate = (iso) => new Date(iso).toLocaleDateString("en-CA");
 
-// find which product a cart item belongs to
-function productIdOf(item) {
-  if (item.productId !== undefined) return Number(item.productId);
-  if (item.product && item.product.id !== undefined) return Number(item.product.id);
-  return parseInt(item.id, 10);
-}
-
-// direction -1 = take stock out (order placed), +1 = put it back (order cancelled)
-function adjustStock(items, direction) {
-  const updated = products.map((p) => {
-    if (p.stock === undefined) return p;
-    const qty = items
-      .filter((i) => productIdOf(i) === p.id)
-      .reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
-    if (!qty) return p;
-    return { ...p, stock: Math.max(0, p.stock + direction * qty) };
-  });
-  saveProducts(updated);
+// turn a database order into the shape the pages use
+function normalize(o) {
+  const items = (o.items || []).map((i) => ({ ...i, id: i.product }));
+  return {
+    id: o._id,
+    number: o.number ? `#LM${o.number}` : `#${String(o._id).slice(-6).toUpperCase()}`,
+    customerName: (o.user && o.user.name) || (o.shipping && o.shipping.name) || "Customer",
+    userEmail: (o.user && o.user.email) || "",
+    date: localDate(o.createdAt),
+    items,
+    itemCount: items.reduce((sum, i) => sum + (i.qty || 0), 0),
+    subtotal: o.subtotal ?? o.total,
+    shipping: o.shippingFee ?? 0,
+    total: o.total,
+    payment: o.paymentMethod,
+    address: o.shipping || {},
+    status: o.status,
+  };
 }
 
 export function OrderProvider({ children }) {
-  const [orders, setOrders] = useState(loadOrders);
+  const { user } = useAuth();
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  const save = (next) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-    } catch {
-      /* ignore */
+  // customers load their own orders, the admin loads all of them
+  const refresh = useCallback(async () => {
+    if (!user) {
+      setOrders([]);
+      return;
     }
-  };
+    setLoading(true);
+    try {
+      const path = user.role === "admin" ? "/orders" : "/orders/mine";
+      const data = await api(path);
+      setOrders(data.map(normalize));
+    } catch {
+      /* keep the old list */
+    }
+    setLoading(false);
+  }, [user]);
 
-  // Create a new order and return it
-  const placeOrder = ({ user, items, subtotal, shipping, total, payment, address }) => {
-    const order = {
-      id: `#LM${FIRST_NUMBER + orders.length}`,
-      userEmail: user.email,
-      customerName: user.name,
-      date: new Date().toISOString().slice(0, 10),
-      items,
-      itemCount: items.reduce((sum, i) => sum + i.qty, 0),
-      subtotal,
-      shipping,
-      total,
-      payment,
-      address,
-      status: "Pending",
-    };
-    const next = [order, ...orders];
-    setOrders(next);
-    save(next);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
-    // reduce stock for every product in the order
-    adjustStock(items, -1);
-
+  // saves the order in the database (stock goes down on the server)
+  const placeOrder = async ({ items, address, payment }) => {
+    const data = await api("/orders", {
+      method: "POST",
+      body: {
+        items: items.map((i) => ({
+          productId: i.id,
+          qty: i.qty,
+          size: i.size,
+          color: i.color,
+        })),
+        shipping: address,
+        paymentMethod: payment,
+      },
+    });
+    const order = normalize(data);
+    setOrders((prev) => [order, ...prev]);
+    await loadProducts(); // fresh stock numbers
     return order;
   };
 
-  // Used by the admin to change an order's status
-  const updateStatus = (id, status) => {
-    const order = orders.find((o) => o.id === id);
-
-    if (order) {
-      if (status === "Cancelled" && order.status !== "Cancelled") {
-        adjustStock(order.items, 1); // cancelled: give the stock back
-      } else if (status !== "Cancelled" && order.status === "Cancelled") {
-        adjustStock(order.items, -1); // un-cancelled: take it out again
-      }
-    }
-
-    const next = orders.map((o) => (o.id === id ? { ...o, status } : o));
-    setOrders(next);
-    save(next);
+  // admin changes a status (cancelling puts the stock back)
+  const updateStatus = async (id, status) => {
+    const data = await api(`/orders/${id}/status`, {
+      method: "PUT",
+      body: { status },
+    });
+    setOrders((prev) => prev.map((o) => (o.id === id ? { ...o, status: data.status } : o)));
+    await loadProducts();
   };
 
   return (
-    <OrderContext.Provider value={{ orders, placeOrder, updateStatus }}>
+    <OrderContext.Provider value={{ orders, loading, refresh, placeOrder, updateStatus }}>
       {children}
     </OrderContext.Provider>
   );

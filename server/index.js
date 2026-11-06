@@ -10,7 +10,7 @@ const User = require("./models/User");
 
 const app = express();
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: "5mb" }));
 
 app.get("/", (req, res) => {
   res.json({ message: "Lumiere API is running" });
@@ -19,6 +19,8 @@ app.get("/", (req, res) => {
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/products"));
 app.use("/api/orders", require("./routes/orders"));
+app.use("/api/users", require("./routes/users"));
+
 // creates the admin account once, if it doesn't exist yet
 async function seedAdmin() {
   const email = (process.env.ADMIN_EMAIL || "admin@lumiere.lk").toLowerCase();

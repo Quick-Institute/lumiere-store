@@ -13,8 +13,7 @@ const SHIPPING_FEE = 500;
 const formatPrice = (n) => `Rs. ${n.toLocaleString("en-LK")}`;
 
 // which product a cart item belongs to
-const productIdOf = (item) =>
-  item.productId !== undefined ? Number(item.productId) : parseInt(item.id, 10);
+const productIdOf = (item) => String(item.id);
 
 // returns a message if something in the cart is not available any more
 function stockProblem(items) {
@@ -25,7 +24,7 @@ function stockProblem(items) {
   });
 
   for (const pid of Object.keys(wanted)) {
-    const product = products.find((p) => p.id === Number(pid));
+    const product = products.find((p) => String(p.id) === pid);
     if (!product || product.stock === undefined) continue;
 
     if (product.stock === 0) {
@@ -53,6 +52,7 @@ function Checkout() {
   const [payment, setPayment] = useState("cod");
   const [card, setCard] = useState({ number: "", expiry: "", cvc: "" });
   const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [placed, setPlaced] = useState(null);
 
   const shipping = subtotal >= FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE;
@@ -61,7 +61,7 @@ function Checkout() {
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
   const changeCard = (e) => setCard({ ...card, [e.target.name]: e.target.value });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -88,25 +88,27 @@ function Checkout() {
       }
     }
 
-    const order = placeOrder({
-      user,
-      items,
-      subtotal,
-      shipping,
-      total,
-      payment: payment === "card" ? "Card (test)" : "Cash on Delivery",
-      address: {
-        name: form.name,
-        phone: form.phone,
-        address: form.address,
-        city: form.city,
-        postal: form.postal,
-      },
-    });
+    setBusy(true);
+    try {
+      const order = await placeOrder({
+        items,
+        payment: payment === "card" ? "Card (test)" : "Cash on Delivery",
+        address: {
+          name: form.name,
+          phone: form.phone,
+          address: form.address,
+          city: form.city,
+          postal: form.postal,
+        },
+      });
 
-    clearCart();
-    setPlaced(order);
-    window.scrollTo(0, 0);
+      clearCart();
+      setPlaced(order);
+      window.scrollTo(0, 0);
+    } catch (err) {
+      setError(err.message);
+    }
+    setBusy(false);
   };
 
   // Order confirmation
@@ -119,7 +121,7 @@ function Checkout() {
         <div className="co-done-box">
           <div>
             <span>Order number</span>
-            <strong>{placed.id}</strong>
+            <strong>{placed.number}</strong>
           </div>
           <div>
             <span>Total</span>
@@ -301,8 +303,8 @@ function Checkout() {
             <span>{formatPrice(total)}</span>
           </div>
 
-          <button type="submit" className="btn co-place">
-            Place Order
+          <button type="submit" className="btn co-place" disabled={busy}>
+            {busy ? "Placing order..." : "Place Order"}
           </button>
           <Link to="/account/cart" className="co-link back">
             ← Back to cart

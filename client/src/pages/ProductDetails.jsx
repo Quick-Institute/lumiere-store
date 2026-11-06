@@ -22,7 +22,7 @@ const descriptions = {
 
 function ProductDetails() {
   const { id } = useParams();
-  const product = products.find((p) => p.id === Number(id));
+  const product = products.find((p) => String(p.id) === id);
   const { user } = useAuth();
   const { addToCart } = useCart();
   const { has, toggle } = useWishlist();

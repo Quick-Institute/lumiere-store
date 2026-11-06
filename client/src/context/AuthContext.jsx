@@ -1,11 +1,7 @@
 import { createContext, useContext, useState } from "react";
+import { api, setToken } from "../api";
 
 const AuthContext = createContext(null);
-
-const demoUsers = [
-  { name: "Admin", email: "admin@lumiere.lk", password: "admin123", role: "admin" },
-  { name: "Madheeha", email: "customer@lumiere.lk", password: "customer123", role: "customer" },
-];
 
 const read = (key, fallback) => {
   try {
@@ -19,34 +15,39 @@ const read = (key, fallback) => {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => read("lumiere_user", null));
 
-  const startSession = (found) => {
-    const safe = { name: found.name, email: found.email, role: found.role };
-    setUser(safe);
-    localStorage.setItem("lumiere_user", JSON.stringify(safe));
-    return { ok: true, user: safe };
+  const startSession = (data) => {
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem("lumiere_user", JSON.stringify(data.user));
+    return { ok: true, user: data.user };
   };
 
-  const login = (email, password) => {
-    const all = [...demoUsers, ...read("lumiere_users", [])];
-    const found = all.find(
-      (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-    );
-    if (!found) return { ok: false, error: "Wrong email or password." };
-    return startSession(found);
-  };
-
-  const register = (name, email, password) => {
-    const saved = read("lumiere_users", []);
-    const all = [...demoUsers, ...saved];
-    if (all.some((u) => u.email.toLowerCase() === email.toLowerCase())) {
-      return { ok: false, error: "This email is already registered." };
+  const login = async (email, password) => {
+    try {
+      const data = await api("/auth/login", {
+        method: "POST",
+        body: { email, password },
+      });
+      return startSession(data);
+    } catch (err) {
+      return { ok: false, error: err.message };
     }
-    const newUser = { name, email, password, role: "customer" };
-    localStorage.setItem("lumiere_users", JSON.stringify([...saved, newUser]));
-    return startSession(newUser);
+  };
+
+  const register = async (name, email, password) => {
+    try {
+      const data = await api("/auth/register", {
+        method: "POST",
+        body: { name, email, password },
+      });
+      return startSession(data);
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
   };
 
   const logout = () => {
+    setToken("");
     setUser(null);
     localStorage.removeItem("lumiere_user");
   };

@@ -4,14 +4,14 @@ const { protect, adminOnly } = require("../middleware/auth");
 
 const router = express.Router();
 
-// GET /api/products (logged-in users)
-router.get("/", protect, async (req, res) => {
-  const products = await Product.find().sort({ createdAt: -1 });
+// GET /api/products (anyone can view)
+router.get("/", async (req, res) => {
+  const products = await Product.find().sort({ createdAt: 1 });
   res.json(products);
 });
 
-// GET /api/products/:id (logged-in users)
-router.get("/:id", protect, async (req, res) => {
+// GET /api/products/:id (anyone can view)
+router.get("/:id", async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
     if (!product) return res.status(404).json({ message: "Product not found." });
@@ -31,7 +31,7 @@ router.post("/", protect, adminOnly, async (req, res) => {
   }
 });
 
-// PUT /api/products/:id (admin, edit and stock update)
+// PUT /api/products/:id (admin: edit and stock update)
 router.put("/:id", protect, adminOnly, async (req, res) => {
   try {
     const product = await Product.findByIdAndUpdate(req.params.id, req.body, {
