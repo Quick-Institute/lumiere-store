@@ -5,6 +5,8 @@ import { useAuth } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 import { useOrders } from "../context/OrderContext";
 import { products } from "../data/products";
+import { api } from "../api";
+import CardPayment from "../components/CardPayment";
 import "./Checkout.css";
 
 const FREE_SHIPPING_OVER = 10000;
@@ -40,7 +42,7 @@ function stockProblem(items) {
 function Checkout() {
   const { user } = useAuth();
   const { items, subtotal, clearCart } = useCart();
-  const { placeOrder } = useOrders();
+  const { placeOrder, refresh } = useOrders();
 
   const [form, setForm] = useState({
     name: user?.name || "",
@@ -50,16 +52,16 @@ function Checkout() {
     postal: "",
   });
   const [payment, setPayment] = useState("cod");
-  const [card, setCard] = useState({ number: "", expiry: "", cvc: "" });
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
   const [busy, setBusy] = useState(false);
   const [placed, setPlaced] = useState(null);
+  const [paying, setPaying] = useState(null); // { order, clientSecret }
 
   const shipping = subtotal >= FREE_SHIPPING_OVER ? 0 : SHIPPING_FEE;
   const total = subtotal + shipping;
 
   const change = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-  const changeCard = (e) => setCard({ ...card, [e.target.name]: e.target.value });
 
   const submit = async (e) => {
     e.preventDefault();
@@ -77,22 +79,14 @@ function Checkout() {
       return;
     }
 
-    if (payment === "card") {
-      if (card.number.replace(/\D/g, "").length !== 16) {
-        setError("Card number must be 16 digits (test card: 4242 4242 4242 4242).");
-        return;
-      }
-      if (!card.expiry.trim() || card.cvc.replace(/\D/g, "").length < 3) {
-        setError("Please enter the card expiry and a 3-digit CVC.");
-        return;
-      }
-    }
-
     setBusy(true);
+
+    // 1. save the order (stock goes down on the server)
+    let order = null;
     try {
-      const order = await placeOrder({
+      order = await placeOrder({
         items,
-        payment: payment === "card" ? "Card (test)" : "Cash on Delivery",
+        payment: payment === "card" ? "Card (Stripe test)" : "Cash on Delivery",
         address: {
           name: form.name,
           phone: form.phone,
@@ -101,15 +95,68 @@ function Checkout() {
           postal: form.postal,
         },
       });
-
       clearCart();
-      setPlaced(order);
-      window.scrollTo(0, 0);
     } catch (err) {
       setError(err.message);
+      setBusy(false);
+      return;
     }
+
+    // 2. card payment: show the card form on this page
+    if (payment === "card") {
+      try {
+        const data = await api("/payments/create-intent", {
+          method: "POST",
+          body: { orderId: order.id },
+        });
+        setPaying({ order, clientSecret: data.clientSecret });
+        window.scrollTo(0, 0);
+        setBusy(false);
+        return;
+      } catch (err) {
+        setNotice(
+          `Your order was placed, but the card payment could not be started (${err.message}). The order is saved as unpaid.`
+        );
+      }
+    }
+
+    setPlaced(order);
+    window.scrollTo(0, 0);
     setBusy(false);
   };
+
+  // Card payment step
+  if (paying) {
+    return (
+      <div className="co-page">
+        <h2 className="co-title">
+          <span className="script">Card payment</span>
+        </h2>
+        <div className="co-block" style={{ maxWidth: 520, margin: "0 auto" }}>
+          <h3>Order {paying.order.number}</h3>
+          <p style={{ marginBottom: 16 }}>
+            Amount to pay: <strong>{formatPrice(paying.order.total)}</strong>
+          </p>
+          <CardPayment
+            order={paying.order}
+            clientSecret={paying.clientSecret}
+            onPaid={() => {
+              setPlaced({ ...paying.order, payment: "Card (Stripe test) - Paid" });
+              setPaying(null);
+              refresh();
+              window.scrollTo(0, 0);
+            }}
+            onLater={() => {
+              setNotice("Your order is saved as unpaid.");
+              setPlaced(paying.order);
+              setPaying(null);
+              window.scrollTo(0, 0);
+            }}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Order confirmation
   if (placed) {
@@ -118,6 +165,7 @@ function Checkout() {
         <CheckCircle size={64} strokeWidth={1.4} />
         <h2>Thank you for your order!</h2>
         <p>Your order has been placed successfully.</p>
+        {notice && <p>{notice}</p>}
         <div className="co-done-box">
           <div>
             <span>Order number</span>
@@ -232,41 +280,11 @@ function Checkout() {
               <CreditCard size={22} />
               <div>
                 <strong>Credit / Debit card</strong>
-                <span>Test mode only. No real payment is taken.</span>
+                <span>Stripe test mode. No real payment is taken.</span>
               </div>
             </label>
 
-            {payment === "card" && (
-              <div className="co-grid card-fields">
-                <label className="full">
-                  Card number
-                  <input
-                    name="number"
-                    placeholder="4242 4242 4242 4242"
-                    value={card.number}
-                    onChange={changeCard}
-                  />
-                </label>
-                <label>
-                  Expiry
-                  <input
-                    name="expiry"
-                    placeholder="MM / YY"
-                    value={card.expiry}
-                    onChange={changeCard}
-                  />
-                </label>
-                <label>
-                  CVC
-                  <input
-                    name="cvc"
-                    placeholder="123"
-                    value={card.cvc}
-                    onChange={changeCard}
-                  />
-                </label>
-              </div>
-            )}
+          
           </div>
 
           {error && <p className="co-error">{error}</p>}
@@ -304,7 +322,7 @@ function Checkout() {
           </div>
 
           <button type="submit" className="btn co-place" disabled={busy}>
-            {busy ? "Placing order..." : "Place Order"}
+            {busy ? "Please wait..." : payment === "card" ? "Continue to payment" : "Place Order"}
           </button>
           <Link to="/account/cart" className="co-link back">
             ← Back to cart

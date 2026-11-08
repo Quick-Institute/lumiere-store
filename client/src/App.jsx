@@ -24,6 +24,7 @@ import Contact from "./pages/Contact";
 import Login from "./pages/Login";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
+import { PaymentSuccess, PaymentCancelled } from "./pages/PaymentResult";
 import {
   AccountOverview,
   MyOrders,
@@ -79,6 +80,24 @@ function App() {
           element={
             <ProtectedRoute>
               <ProductDetails />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* Card payment results (Stripe sends the customer back here) */}
+        <Route
+          path="/payment-success"
+          element={
+            <ProtectedRoute role="customer">
+              <PaymentSuccess />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/payment-cancelled"
+          element={
+            <ProtectedRoute role="customer">
+              <PaymentCancelled />
             </ProtectedRoute>
           }
         />

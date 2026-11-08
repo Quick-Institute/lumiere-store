@@ -1,6 +1,8 @@
 const express = require("express");
 const Product = require("../models/Product");
 const Order = require("../models/Order");
+const User = require("../models/User");
+const { sendInvoiceEmail } = require("../utils/mailer");
 const { protect, adminOnly } = require("../middleware/auth");
 
 const router = express.Router();
@@ -92,6 +94,11 @@ router.post("/", protect, async (req, res) => {
       shipping,
       paymentMethod: paymentMethod || "Cash on Delivery",
     });
+
+    // 4. email the PDF invoice (runs in the background, never blocks the order)
+    User.findById(req.user.id)
+      .then((u) => (u ? sendInvoiceEmail(order, u.email) : null))
+      .catch((e) => console.log("Invoice email failed:", e.message));
 
     res.status(201).json(order);
   } catch (err) {
