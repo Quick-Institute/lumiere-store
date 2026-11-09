@@ -104,4 +104,5 @@ Open the address it prints (usually http://localhost:5173).
 - Card payment works in Stripe test mode only
 
 ## Author
-Madheeha, SE Intern (October batch)
+
+Madhee, SE Intern (October batch)
