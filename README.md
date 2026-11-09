@@ -105,4 +105,4 @@ Open the address it prints (usually http://localhost:5173).
 
 ## Author
 
-Madhee, SE Intern (October batch)
+Madheeha, SE Intern (October batch)
